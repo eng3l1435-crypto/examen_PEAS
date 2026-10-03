@@ -1,0 +1,27 @@
+[project]
+name = "exam-py"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "angel_hernandez", email = "eng3l1435@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "customtkinter>=6.0.0",
+    "fpdf2>=2.8.9",
+    "matplotlib>=3.11.2",
+    "ollama>=0.6.3",
+    "pandas>=3.0.6",
+    "pydantic>=2.13.5",
+    "pymongo>=4.18.2",
+    "python-dotenv>=1.2.4",
+    "scikit-learn>=1.9.1",
+]
+
+[project.scripts]
+exam-py = "exam_py:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
