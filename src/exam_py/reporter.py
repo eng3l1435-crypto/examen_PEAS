@@ -23,17 +23,19 @@ class GeneradorReportesPDF:
             # Contar decisiones reales de la bitácora de MongoDB
             estandar_cnt = sum(1 for r in registros if r.get("evaluacion", {}).get("acceso_estandar"))
             especial_cnt = sum(1 for r in registros if r.get("evaluacion", {}).get("inspeccion_especial"))
-            denegados_cnt = len(registros) - estandar_cnt - especial_cnt
+            entrega_outime_cnt = sum(1 for r in registros if r.get("evaluacion", {}).get("inspeccion_especial"))
+            denegados_cnt = len(registros) - estandar_cnt - especial_cnt - entrega_outime_cnt
             
-            categorias = ["Acceso Estándar", "Inspección Especial", "Denegados"]
+            categorias = ["Acceso Estándar", "Inspección Especial", "Entrega Fuera de Tiempo","Denegados"]
             valores = [estandar_cnt, especial_cnt, max(0, denegados_cnt)]
         else:
             # Si la BD está vacía, usamos los datos teóricos de la tabla de verdad (16 casos)
             tabla = generar_tabla_verdad()
             n_A = sum(1 for f in tabla if f["A"])
             n_E = sum(1 for f in tabla if f["E"])
+            n_C = sum(1 for f in tabla if f["C"])
             categorias = ["Acceso Estándar (A)", "Inspección Especial (E)"]
-            valores = [n_A, n_E]
+            valores = [n_A, n_E, n_C]
 
         plt.figure(figsize=(6, 2.8))
         plt.bar(categorias, valores, color=["#28a745", "#ffc107", "#dc3545"][:len(categorias)], width=0.45)
@@ -73,9 +75,9 @@ class GeneradorReportesPDF:
 
         # Sección 2: Auditoría del Motor Lógico (Tabla de Verdad Completa)
         pdf.set_font("Arial", "B", 11)
-        pdf.cell(0, 7, txt="2. Auditoría del Motor de Reglas (Tabla de Verdad - 16 Casos)", ln=True)
+        pdf.cell(0, 7, txt="2. Auditoría del Motor de Reglas (Tabla de Verdad - 32 casos)", ln=True)
         pdf.set_font("Arial", "", 9)
-        pdf.multi_cell(0, 5, txt="El motor lógico formal evalúa todas las combinaciones posibles bajo las premisas P (Autorización), Q (Exceso de peso), R (Materiales peligrosos) y S (Conductor certificado), determinando el Acceso Estándar (A) y la Inspección Especial (E):")
+        pdf.multi_cell(0, 5, txt="El motor lógico formal evalúa todas las combinaciones posibles bajo las premisas P (Autorización), Q (Exceso de peso), R (Materiales peligrosos), S (Conductor certificado), T (Entrega fuera de tiempo), determinando el Acceso Estándar (A) y la Inspección Especial (E):")
         pdf.ln(2)
 
         # Cabecera de la tabla en el PDF
@@ -85,7 +87,7 @@ class GeneradorReportesPDF:
         
         # Anchos de columna ajustados para texto ASCII compatible
         col_widths = [15, 15, 15, 15, 20, 24, 24, 15, 15]
-        headers = ["P", "Q", "R", "S", "NOT Q", "P AND S", "R OR Q", "A", "E"]
+        headers = ["P", "Q", "R", "S" , "T", "NOT Q", "P AND S", "R OR Q", "A", "E", "C"]
         
         for i, h in enumerate(headers):
             pdf.cell(col_widths[i], 6, h, 1, 0, "C", fill=True)
@@ -99,9 +101,9 @@ class GeneradorReportesPDF:
         v = lambda b: "V" if b else "F"
         for fila in tabla:
             datos_fila = [
-                v(fila["P"]), v(fila["Q"]), v(fila["R"]), v(fila["S"]),
+                v(fila["P"]), v(fila["Q"]), v(fila["R"]), v(fila["S"]), v(fila["T"]),
                 v(fila["no_Q"]), v(fila["P_y_S"]), v(fila["R_o_Q"]),
-                v(fila["A"]), v(fila["E"])
+                v(fila["A"]), v(fila["E"]), v(fila["T"]),
             ]
             for i, val in enumerate(datos_fila):
                 pdf.cell(col_widths[i], 5, val, 1, 0, "C")

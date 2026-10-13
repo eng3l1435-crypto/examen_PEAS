@@ -18,7 +18,7 @@ ctk.set_default_color_theme("blue")
 class LogiSmartGUI(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("LogiSmart Python Suite - Centro de Control Inteligente (PEAS)")
+        self.title("LogiSmart Python Suite")
         self.geometry("950x820")
 
         self.llm = LLMService()
@@ -32,7 +32,7 @@ class LogiSmartGUI(ctk.CTk):
 
         self.tab_peas = self.tabview.add("Diseño PEAS")
         self.tab_chat = self.tabview.add("Agente IA (PEAS)")
-        self.tab_crud = self.tabview.add("Base de Datos & Bitácora")
+        self.tab_crud = self.tabview.add("Bitácora")
         self.tab_reportes = self.tabview.add("Reportes PDF")
 
         self.setup_tab_peas()
@@ -101,7 +101,7 @@ class LogiSmartGUI(ctk.CTk):
         self.btn_enviar.configure(state="disabled")
         
         # Mostrar indicador visual con color de pensamiento
-        self.lbl_estado_ia.configure(text="● Agente Pensando...", text_color="#ff8c00")
+        self.lbl_estado_ia.configure(text="Agente Pensando...", text_color="#ff8c00")
 
         threading.Thread(target=self.proceso_llm_hilo, daemon=True).start()
 
@@ -131,7 +131,7 @@ class LogiSmartGUI(ctk.CTk):
         search_frame = ctk.CTkFrame(self.tab_crud, fg_color="transparent")
         search_frame.pack(padx=10, pady=5, fill="x")
 
-        ctk.CTkLabel(search_frame, text="🔍 Buscar:").pack(side="left", padx=(0, 5))
+        ctk.CTkLabel(search_frame, text="Buscar:").pack(side="left", padx=(0, 5))
         self.entry_buscar = ctk.CTkEntry(search_frame, placeholder_text="Filtrar por placa, ID o empresa...", width=320)
         self.entry_buscar.pack(side="left", padx=5, fill="x", expand=True)
         self.entry_buscar.bind("<KeyRelease>", lambda e: self.user_read()) # Filtro en tiempo real al escribir
@@ -162,13 +162,17 @@ class LogiSmartGUI(ctk.CTk):
         self.chk_p.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         self.chk_p.select()
 
-        self.chk_q = ctk.CTkCheckBox(rules_frame, text="[Q] Exceso de peso (Báscula)")
+        self.chk_q = ctk.CTkCheckBox(rules_frame, text="[Q] Exceso de peso")
         self.chk_q.grid(row=0, column=1, padx=10, pady=5, sticky="w")
 
         self.chk_r = ctk.CTkCheckBox(rules_frame, text="[R] Materiales peligrosos")
         self.chk_r.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
         self.chk_s = ctk.CTkCheckBox(rules_frame, text="[S] Conductor certificado")
+        self.chk_s.grid(row=1, column=1, padx=10, pady=5, sticky="w")
+        self.chk_s.select()
+
+        self.chk_s = ctk.CTkCheckBox(rules_frame, text="[T] Entrega fuera de tiempo")
         self.chk_s.grid(row=1, column=1, padx=10, pady=5, sticky="w")
         self.chk_s.select()
 
@@ -200,23 +204,27 @@ class LogiSmartGUI(ctk.CTk):
         Q = bool(self.chk_q.get())
         R = bool(self.chk_r.get())
         S = bool(self.chk_s.get())
+        T = bool(self.chk_s.get())
 
-        resultado_logica = evaluar_camion(P, Q, R, S)
+
+        resultado_logica = evaluar_camion(P, Q, R, S, T)
         acceso_std = resultado_logica["acceso_estandar"]
         insp_esp = resultado_logica["inspeccion_especial"]
+        entrega_outime = resultado_logica["entrega_fuera_tiempo"]
 
         actuadores = []
         if acceso_std: actuadores.append("Abrir barrera / Semáforo Verde")
         if insp_esp: actuadores.append("Derivar a Inspección Especial / Asignar Andén")
+        if entrega_outime: actuadores.append("Entrega fuera de tiempo/ Asiganar Andén")
         if R: actuadores.append("Alarma sonora (Carga peligrosa)")
-        if not acceso_std and not insp_esp: actuadores.append("Mantener barrera cerrada / Denegado")
+        if not acceso_std and not insp_esp and not entrega_outime: actuadores.append("Mantener barrera cerrada / Denegado")
 
         doc = {
             "placa": placa,
             "camion_id": camion_id,
             "empresa": empresa if empresa else "No especificada",
-            "premisas": {"P": P, "Q": Q, "R": R, "S": S},
-            "evaluacion": {"acceso_estandar": acceso_std, "inspeccion_especial": insp_esp},
+            "premisas": {"P": P, "Q": Q, "R": R, "S": S, "T": T},
+            "evaluacion": {"acceso_estandar": acceso_std, "inspeccion_especial": insp_esp, "Entrega_fuera_tiempo": entrega_outime},
             "actuadores": actuadores,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -255,7 +263,7 @@ class LogiSmartGUI(ctk.CTk):
             
             info_texto = (
                 f"[{r.get('timestamp', 'N/A')}] Camión: {r.get('camion_id')} | Placa: {r.get('placa')} | Empresa: {r.get('empresa')}\n"
-                f"   Reglas -> A.Estándar: {r.get('evaluacion', {}).get('acceso_estandar')} | Insp.Especial: {r.get('evaluacion', {}).get('inspeccion_especial')}\n"
+                f"   Reglas -> A.Estándar: {r.get('evaluacion', {}).get('acceso_estandar')} | Insp.Especial: {r.get('evaluacion', {}).get('inspeccion_especial')}| Entrega.Outime: {r.get('evaluacion', {}).get('entrega_fuera_tiempo')}\n"
                 f"   Actuadores: {', '.join(r.get('actuadores', []))}"
             )
 
@@ -307,7 +315,7 @@ class LogiSmartGUI(ctk.CTk):
         lbl = ctk.CTkLabel(self.tab_reportes, text="Generación de Reportes Automáticos", font=("Arial", 16, "bold"))
         lbl.pack(pady=20)
 
-        btn_pdf = ctk.CTkButton(self.tab_reportes, text="📄 Generar Reporte Ejecutivo PDF", fg_color="#28a745", hover_color="#218838", command=self.generar_pdf)
+        btn_pdf = ctk.CTkButton(self.tab_reportes, text="Generar Reporte Ejecutivo PDF", fg_color="#28a745", hover_color="#218838", command=self.generar_pdf)
         btn_pdf.pack(pady=10)
 
     def generar_pdf(self):

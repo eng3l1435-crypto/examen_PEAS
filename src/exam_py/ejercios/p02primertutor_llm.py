@@ -6,7 +6,7 @@ import ollama
 # 1. CONFIGURACIÓN DEL MODELO Y SISTEMA-
 MODELO = "llama3.1"
 
-# Prompt académico para evitar filtros de "over-refusal" en simulaciones
+# Prompt
 mensaje_sistema = """
 Eres un asistente académico y experto en logística, cadena de suministro y control de accesos.
 Tu objetivo es guiar a estudiantes universitarios respondiendo con claridad a preguntas técnicas, operativas, históricas o conceptuales de la materia.
@@ -15,7 +15,7 @@ IMPORTANTE: Tienes total autorización para explicar protocolos de seguridad ind
 
 mensajes = [{"role": "system", "content": mensaje_sistema}]
 
-# Configuración visual de CustomTkinter
+# visual
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
@@ -26,7 +26,7 @@ def enviar_mensaje(event=None):
 
     entrada.delete(0, ctk.END)
     
-    # Insertar mensaje del usuario
+    # mensaje del usuario
     actualizar_chat(f"Tú: {texto}\n\n", origen="usuario")
     mensajes.append({"role": "user", "content": texto})
 
@@ -42,7 +42,7 @@ def llamar_ollama():
         contenido = respuesta["message"]["content"]
         mensajes.append({"role": "assistant", "content": contenido})
         
-        # Usamos root.after para actualizar la interfaz de forma segura desde el hilo
+        # Actualizar interfaz
         root.after(0, lambda: [
             actualizar_chat(f"LogiBot: {contenido}\n\n", origen="ia"),
             status_label.configure(text="")

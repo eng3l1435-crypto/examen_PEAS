@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 ==============================================================================
  LogiSmart Python Suite  -  Orquestador Principal (Arquitectura Modular)
@@ -43,7 +41,7 @@ def ejecutar_demo_consola():
     # 2. Tablas de Verdad del Motor Lógico
     print(obtener_tabla_verdad_formateada())
 
-    # 3. Base de Datos (CRUD básico de prueba)
+    # 3. Base de Datos
     db = GestorMongoDB()
     if db.verificar_conexion():
         doc = {"placa": "ABC-123-D", "camion_id": "CAM-102", "autorizacion": True}
@@ -51,7 +49,7 @@ def ejecutar_demo_consola():
         print(f" -> [CRUD] Camión insertado con ID: {cid}")
         db.eliminar_registro("camiones", {"camion_id": "CAM-102"})
     else:
-        log.warning("MongoDB no disponible para la demo en vivo por consola.")
+        log.warning("MongoDB no disponible.")
 
     # 4. Clasificador de Incidentes
     res_json = procesar_incidente("operador@planta.example", "Derrame urgente", "Fuga de químico en CAM-102")
@@ -75,6 +73,6 @@ if __name__ == "__main__":
     else:
         # Por defecto, ejecuta la Interfaz Gráfica con pestañas: python logiuncodigo.py
         print("=" * 78)
-        print("INICIANDO CENTRO DE CONTROL LOGISMART SUITE (GUI)")
+        print("LOGISMART")
         print("=" * 78)
         iniciar_interfaz()

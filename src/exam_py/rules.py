@@ -1,12 +1,12 @@
 import itertools
 from typing import Dict, List
 
-def evaluar_camion(P: bool, Q: bool, R: bool, S: bool) -> Dict[str, bool]:
+def evaluar_camion(P: bool, Q: bool, R: bool, S: bool, T: bool) -> Dict[str, bool]:
     """
     Evalúa las reglas de acceso estándar (A) e inspección especial (E) 
     mediante lógica proposicional.
     """
-    for nombre, valor in (("P", P), ("Q", Q), ("R", R), ("S", S)):
+    for nombre, valor in (("P", P), ("Q", Q), ("R", R), ("S", S), ("T", T)):
         if not isinstance(valor, bool):
             raise TypeError(f"La premisa {nombre} debe ser bool")
 
@@ -16,7 +16,13 @@ def evaluar_camion(P: bool, Q: bool, R: bool, S: bool) -> Dict[str, bool]:
     # E = P ∧ (R ∨ Q) -> Autorizado y (carga peligrosa O exceso de peso)
     inspeccion_especial = P and (R or Q)
 
-    return {"acceso_estandar": acceso_estandar, "inspeccion_especial": inspeccion_especial}
+    # C = P ∧ T and (R ∨ Q) -> Autorizado y (carga peligrosa O exceso de peso)
+    entrega_out_time = P and T and (R or Q)
+        
+
+    return {"acceso_estandar": acceso_estandar, 
+            "inspeccion_especial": inspeccion_especial, 
+            "entrega_fuera_tiempo": entrega_out_time}
 
 def generar_tabla_verdad() -> List[Dict[str, bool]]:
     """
@@ -24,15 +30,16 @@ def generar_tabla_verdad() -> List[Dict[str, bool]]:
     las columnas intermedias (¬Q, P∧S, R∨Q) para la trazabilidad.
     """
     filas: List[Dict[str, bool]] = []
-    for P, Q, R, S in itertools.product([True, False], repeat=4):
-        resultado = evaluar_camion(P, Q, R, S)
+    for P, Q, R, S, T in itertools.product([True, False], repeat=5):
+        resultado = evaluar_camion(P, Q, R, S, T)
         filas.append({
-            "P": P, "Q": Q, "R": R, "S": S,
+            "P": P, "Q": Q, "R": R, "S": S, "T": T,
             "no_Q": not Q,             # ¬Q
             "P_y_S": P and S,          # P ∧ S
             "R_o_Q": R or Q,           # R ∨ Q
             "A": resultado["acceso_estandar"],
             "E": resultado["inspeccion_especial"],
+            "C": resultado["entrega_fuera_tiempo"]
         })
     return filas
 
@@ -46,20 +53,21 @@ def obtener_tabla_verdad_formateada() -> str:
 
     lineas = []
     lineas.append("=" * 78)
-    lineas.append("SECCIÓN 2 - TABLAS DE VERDAD (Motor Lógico)")
+    lineas.append("SECCIÓN 2 - TABLAS DE VERDAD")
     lineas.append("=" * 78)
-    lineas.append(f"{'P':^3}{'Q':^3}{'R':^3}{'S':^3} | {'¬Q':^4}{'P∧S':^6}{'R∨Q':^6} | {'A':^3}{'E':^3}")
+    lineas.append(f"{'P':^3}{'Q':^3}{'R':^3}{'S':^3}{'T':^3} | {'¬Q':^4}{'P∧S':^6}{'R∨Q':^6} | {'A':^3}{'E':^3}{'C':^3}")
     lineas.append("-" * 42)
     
     for f in tabla:
         lineas.append(
-            f"{v(f['P']):^3}{v(f['Q']):^3}{v(f['R']):^3}{v(f['S']):^3} | "
+            f"{v(f['P']):^3}{v(f['Q']):^3}{v(f['R']):^3}{v(f['S']):^3}{v(f['T']):^3} | "
             f"{v(f['no_Q']):^4}{v(f['P_y_S']):^6}{v(f['R_o_Q']):^6} | "
-            f"{v(f['A']):^3}{v(f['E']):^3}"
+            f"{v(f['A']):^3}{v(f['E']):^3}{v(f['C']):^3}"
         )
     
     # Conclusiones estadísticas breves para justificar en el reporte
     n_A = sum(f["A"] for f in tabla)
     n_E = sum(f["E"] for f in tabla)
-    lineas.append(f"\nResumen: A es Verdadera en {n_A}/16 casos; E es Verdadera en {n_E}/16 casos.")
+    n_C = sum(f["C"] for f in tabla)
+    lineas.append(f"\nResumen: A es Verdadera en {n_A}/32 casos; E es Verdadera en {n_E}/32 casos; C es Verdadera en {n_C}/32 casos")
     return "\n".join(lineas)
