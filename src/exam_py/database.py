@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 import os
 import logging
 from typing import Dict, List, Optional
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, PyMongoError
 
-# Carga automática del archivo .env si está disponible
 try:
     from dotenv import load_dotenv
     load_dotenv()
